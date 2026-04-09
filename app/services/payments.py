@@ -84,8 +84,10 @@ async def withdrawal_watcher(
                 continue
             for item in items:
                 user = await db.get_or_create_user(item.user_id)
+                log.info("Checking withdrawal %d: user_id=%d, cryptobot_id=%s", item.withdrawal_id, item.user_id, user.cryptobot_id)
                 if user.cryptobot_id is None:
-                    log.warning("User %d has no cryptobot_id, skipping withdrawal %d", item.user_id, item.withdrawal_id)
+                    log.warning("User %d has NO cryptobot_id! User must set it via /wd menu. Skipping withdrawal %d", item.user_id, item.withdrawal_id)
+                    await bot.send_message(item.user_id, "⚠️ Для вывода средств необходимо указать CryptoBot ID!\n\nПерейдите в меню: 💸 Вывод")
                     continue
                 try:
                     log.info("Processing withdrawal %d: user=%d, amount=%.2f, cryptobot_id=%d", item.withdrawal_id, item.user_id, item.net, user.cryptobot_id)
@@ -94,9 +96,10 @@ async def withdrawal_watcher(
                     await db.deduct_frozen(item.user_id, item.amount)
                     log.info("Withdrawal %d completed: transfer_id=%s", item.withdrawal_id, transfer.transfer_id)
                     with contextlib.suppress(Exception):
-                        await bot.send_message(item.user_id, f"✅ Вывод выполнен: {item.net:.2f} USDT")
+                        await bot.send_message(item.user_id, f"✅ Вывод выполнен: {item.net:.2f} USDT\n\nID перевода: {transfer.transfer_id}")
                 except Exception as e:
                     log.error("Withdrawal %d failed: %s", item.withdrawal_id, e)
+                    await bot.send_message(item.user_id, f"❌ Ошибка вывода: {e}")
                     continue
             await asyncio.sleep(interval_sec)
         except asyncio.CancelledError:
