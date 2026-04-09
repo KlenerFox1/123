@@ -54,6 +54,7 @@ async def main() -> None:
     print(f"🔧 DEBUG: type = {type(cfg.auto_withdraw)}")
 
     async def run_watchers():
+        print(f"🔧 DEBUG in run_watchers: cfg.auto_withdraw = {cfg.auto_withdraw}")
         await asyncio.gather(
             invoice_watcher(db=db, cryptobot=cryptobot, bot=bot, interval_sec=cfg.watcher_interval_sec),
             treasury_balance_watcher(db=db, cryptobot=cryptobot, interval_sec=5),

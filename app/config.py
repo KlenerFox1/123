@@ -61,12 +61,17 @@ class Config:
 
 
 def load_config() -> Config:
+    import os
+    auto_wd = os.getenv("AUTO_WITHDRAW", "0")
+    print(f"🔧 DEBUG config.py: AUTO_WITHDRAW env = '{auto_wd}'")
+    print(f"🔧 DEBUG config.py: in set = {auto_wd in {'1', 'true', 'True'}}")
+    
     return Config(
         bot_token=_env("BOT_TOKEN"),
         owner_admin_id=_env_int("OWNER_ADMIN_ID"),
         admin_ids=_parse_int_list(os.getenv("ADMIN_IDS", "")),
         cryptobot_api_key=_env("CRYPTOBOT_API_KEY"),
-        auto_withdraw=os.getenv("AUTO_WITHDRAW", "0") in {"1", "true", "True"},
+        auto_withdraw=auto_wd in {"1", "true", "True"},
         watcher_interval_sec=_env_int("WATCHER_INTERVAL_SEC", 10),
     )
 
