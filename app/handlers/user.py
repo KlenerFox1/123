@@ -251,7 +251,13 @@ async def withdraw(cb: CallbackQuery, db: Database, state: FSMContext) -> None:
     user = await db.get_or_create_user(cb.from_user.id)
     if user.cryptobot_id is None:
         await state.set_state(WithdrawFlow.cryptobot_id)
-        await cb.message.edit_text("🤖 Введите ваш CryptoBot user_id.", reply_markup=kb.back_home())
+        await cb.message.edit_text(
+            "💸 <b>Первый вывод средств</b>\n\n"
+            "🤖 Введите ваш CryptoBot user_id для получения выплат.\n\n"
+            "ℹ️ Узнать свой ID можно через бота @userinfobot\n\n"
+            "📝 Отправьте ID одним сообщением:",
+            reply_markup=kb.back_home(),
+        )
         await cb.answer()
         return
     await state.set_state(WithdrawFlow.amount)

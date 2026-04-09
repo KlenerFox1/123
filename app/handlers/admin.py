@@ -142,30 +142,45 @@ async def save_note(message: Message, db: Database, state: FSMContext, cfg: Conf
 
 
 @router.callback_query(F.data == "a:types")
-async def types_menu(cb: CallbackQuery, db: Database, cfg: Config) -> None:
+async def types_menu(cb: CallbackQuery, db: Database, cfg: Config, state: FSMContext) -> None:
     if not _guard(cb.from_user.id, cfg):
         return
     items = await db.get_account_types_full()
-    await cb.message.edit_text("🧾 <b>Типы аккаунтов</b>\nНажмите на тип, затем отправьте новую цену сообщением в формате: Название=0.7", reply_markup=kb.admin_types_menu(items))
+    await state.set_state(AdminSettingsFlow.account_types)
+    await cb.message.edit_text("🧾 <b>Типы аккаунтов</b>\nОтправьте новую цену сообщением в формате: Название=0.7", reply_markup=kb.admin_types_menu(items))
     await cb.answer()
 
 
 @router.callback_query(F.data.startswith("a:type:"))
-async def type_hint(cb: CallbackQuery, cfg: Config) -> None:
+async def type_hint(cb: CallbackQuery, state: FSMContext, cfg: Config) -> None:
     if not _guard(cb.from_user.id, cfg):
         return
     name = cb.data.split(":", 2)[2]
-    await cb.answer(f"Отправьте сообщением: {name}=0.7", show_alert=True)
+    await state.set_state(AdminSettingsFlow.account_types)
+    await state.update_data(target_type=name)
+    await cb.message.edit_text(
+        f"🧾 Обновление цены для <b>{name}</b>\n\nОтправьте новую цену одним сообщением в формате: 0.7",
+        reply_markup=kb.admin_cancel_menu("a:home", "a:types"),
+    )
+    await cb.answer()
 
 
-@router.message(F.text.regexp(r"^.+\=\d+(?:[\.,]\d+)?$"))
-async def update_type_price(message: Message, db: Database, cfg: Config) -> None:
+@router.message(AdminSettingsFlow.account_types)
+async def update_type_price(message: Message, db: Database, state: FSMContext, cfg: Config) -> None:
     if not _guard(message.from_user.id, cfg):
         return
+    data = await state.get_data()
+    name = data.get("target_type", "")
+    if not name:
+        await state.clear()
+        await message.answer("Ошибка процесса.")
+        return
     raw = (message.text or "").strip()
-    name, price_raw = raw.split("=", 1)
-    name = name.strip()
-    price = float(price_raw.replace(",", ".").strip())
+    try:
+        price = float(raw.replace(",", ".").strip())
+    except ValueError:
+        await message.answer("Введите число, например: 0.7")
+        return
     items = await db.get_account_types_full()
     updated = False
     for item in items:
@@ -175,7 +190,11 @@ async def update_type_price(message: Message, db: Database, cfg: Config) -> None
             break
     if updated:
         await db.set_account_types(items)
+        await state.clear()
         await message.answer(f"✅ Цена для {name} обновлена: ${price:.2f}", reply_markup=kb.admin_menu())
+    else:
+        await state.clear()
+        await message.answer("Тип аккаунта не найден.")
 
 
 @router.callback_query(F.data == "a:set")
