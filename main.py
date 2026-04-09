@@ -21,10 +21,20 @@ from app.services.payments import invoice_watcher, treasury_balance_watcher, wit
 
 
 async def main() -> None:
-    env_path = Path(__file__).with_name(".env")
-    load_dotenv(dotenv_path=env_path, override=True, encoding="utf-8")
-    load_dotenv(override=True, encoding="utf-8")
-
+    # Загружаем .env вручную
+    import os
+    env_file = Path(".env")
+    if env_file.exists():
+        with open(env_file, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, value = line.split("=", 1)
+                    os.environ[key] = value
+        print(f"✅ Loaded .env file: AUTO_WITHDRAW = {os.environ.get('AUTO_WITHDRAW')}")
+    else:
+        print("❌ .env file not found!")
+    
     cfg = load_config()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 
