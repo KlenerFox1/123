@@ -41,6 +41,7 @@ async def main() -> None:
 
     me = await bot.get_me()
     logging.info("Bot started: @%s (%s)", me.username, me.id)
+    logging.info("Config: auto_withdraw=%s, watcher_interval=%d", cfg.auto_withdraw, cfg.watcher_interval_sec)
 
     watcher_tasks: list[asyncio.Task] = [
         asyncio.create_task(invoice_watcher(db=db, cryptobot=cryptobot, bot=bot, interval_sec=cfg.watcher_interval_sec)),

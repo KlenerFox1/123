@@ -69,26 +69,38 @@ async def withdrawal_watcher(
     interval_sec: int = 10,
     auto_withdraw: bool = False,
 ) -> None:
+    import logging
+    log = logging.getLogger("withdrawal_watcher")
+    log.info("Withdrawal watcher started: auto_withdraw=%s", auto_withdraw)
+    
     while True:
         try:
             items = await db.list_pending_withdrawals(limit=50)
+            if items:
+                log.info("Found %d pending withdrawals", len(items))
             if not auto_withdraw:
+                log.debug("auto_withdraw=False, skipping")
                 await asyncio.sleep(interval_sec)
                 continue
             for item in items:
                 user = await db.get_or_create_user(item.user_id)
                 if user.cryptobot_id is None:
+                    log.warning("User %d has no cryptobot_id, skipping withdrawal %d", item.user_id, item.withdrawal_id)
                     continue
                 try:
+                    log.info("Processing withdrawal %d: user=%d, amount=%.2f, cryptobot_id=%d", item.withdrawal_id, item.user_id, item.net, user.cryptobot_id)
                     transfer = await cryptobot.transfer(user_id=user.cryptobot_id, amount=item.net)
                     await db.set_withdrawal_status(item.withdrawal_id, status="done", cryptobot_transfer_id=transfer.transfer_id)
                     await db.deduct_frozen(item.user_id, item.amount)
+                    log.info("Withdrawal %d completed: transfer_id=%s", item.withdrawal_id, transfer.transfer_id)
                     with contextlib.suppress(Exception):
                         await bot.send_message(item.user_id, f"✅ Вывод выполнен: {item.net:.2f} USDT")
-                except Exception:
+                except Exception as e:
+                    log.error("Withdrawal %d failed: %s", item.withdrawal_id, e)
                     continue
             await asyncio.sleep(interval_sec)
         except asyncio.CancelledError:
             raise
-        except Exception:
+        except Exception as e:
+            log.error("Watcher error: %s", e)
             await asyncio.sleep(interval_sec)
