@@ -79,11 +79,11 @@ class CryptoBotAPI:
                 )
         return response
 
-    async def transfer(self, *, user_id: int, amount: float, asset: str = "USDT", comment: str = "Withdrawal", spend_id: str | None = None) -> CryptoTransfer:
+    async def transfer(self, *, user_id: int, amount: float, asset: str = "USDT", spend_id: str | None = None) -> CryptoTransfer:
         import uuid
         if spend_id is None:
             spend_id = str(uuid.uuid4())
-        result = await self._call("/transfer", {"user_id": user_id, "asset": asset, "amount": str(amount), "comment": comment, "spend_id": spend_id})
+        result = await self._call("/transfer", {"user_id": user_id, "asset": asset, "amount": str(amount), "spend_id": spend_id})
         if not isinstance(result, dict):
             raise CryptoBotError("Некорректный ответ transfer")
         return CryptoTransfer(
