@@ -39,6 +39,9 @@ async def main() -> None:
     dp.include_router(user_handlers.router)
     dp.include_router(admin_handlers.router)
 
+    me = await bot.get_me()
+    logging.info("Bot started: @%s (%s)", me.username, me.id)
+
     watcher_tasks: list[asyncio.Task] = [
         asyncio.create_task(invoice_watcher(db=db, cryptobot=cryptobot, bot=bot, interval_sec=cfg.watcher_interval_sec)),
         asyncio.create_task(treasury_balance_watcher(db=db, cryptobot=cryptobot, interval_sec=5)),
