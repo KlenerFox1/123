@@ -23,24 +23,22 @@ from app.services.payments import invoice_watcher, treasury_balance_watcher, wit
 async def main() -> None:
     import os
     
-    # Путь к папке с main.py
-    bot_dir = Path(__file__).parent.resolve()
-    env_file = bot_dir / ".env"
+    # Читаем .env как строку прямо из этого файла
+    env_content = """BOT_TOKEN=8654732122:AAFWWhHWke0Hkwj2ZOiYGhogmN0beXE2xx0
+OWNER_ADMIN_ID=8693383904
+ADMIN_IDS=
+CRYPTOBOT_API_KEY=550644:AAs1pVOj9eNKiDtiNcj98Pjfk9E3lkiZ06K
+AUTO_WITHDRAW=1
+WATCHER_INTERVAL_SEC=10
+PROXY_URL="""
     
-    print(f"🔍 Bot directory: {bot_dir}")
-    print(f"🔍 .env path: {env_file}")
-    print(f"🔍 Exists: {env_file.exists()}")
+    for line in env_content.strip().split("\n"):
+        line = line.strip()
+        if line and "=" in line:
+            key, value = line.split("=", 1)
+            os.environ[key] = value
     
-    if env_file.exists():
-        with open(env_file, "r", encoding="utf-8") as f:
-            for line in f:
-                line = line.strip()
-                if line and not line.startswith("#") and "=" in line:
-                    key, value = line.split("=", 1)
-                    os.environ[key] = value
-        print(f"✅ Loaded: AUTO_WITHDRAW = {os.environ.get('AUTO_WITHDRAW')}")
-    else:
-        print("❌ .env not found!")
+    print(f"✅ Config loaded: AUTO_WITHDRAW = {os.environ.get('AUTO_WITHDRAW')}")
     
     cfg = load_config()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
