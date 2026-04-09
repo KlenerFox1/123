@@ -105,6 +105,10 @@ async def withdrawal_watcher(
                     await db.set_withdrawal_status(item.withdrawal_id, status="done", cryptobot_transfer_id=transfer.transfer_id)
                     await db.deduct_frozen(item.user_id, item.amount)
                     
+                    # Списываем с кассы
+                    await db.deduct_treasury_balance(item.net)
+                    print(f"💰 Treasury deducted: {item.net}")
+                    
                     await bot.send_message(item.user_id, f"✅ Вывод выполнен: {item.net:.2f} USDT\n\nID перевода: {transfer.transfer_id}")
                 except Exception as e:
                     error_str = str(e)
