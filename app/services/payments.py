@@ -107,10 +107,16 @@ async def withdrawal_watcher(
                     
                     await bot.send_message(item.user_id, f"✅ Вывод выполнен: {item.net:.2f} USDT\n\nID перевода: {transfer.transfer_id}")
                 except Exception as e:
-                    print(f"❌ Transfer failed: {e}")
-                    import traceback
-                    traceback.print_exc()
-                    await bot.send_message(item.user_id, f"❌ Ошибка вывода: {e}")
+                    error_str = str(e)
+                    print(f"❌ Transfer failed: {error_str}")
+                    
+                    # Проверяем ошибку баланса
+                    if "INSUFFICIENT_BALANCE" in error_str or "not enough balance" in error_str.lower():
+                        await bot.send_message(item.user_id, "❌ Вывод недоступен.\n\n💰 Ошибка Crypto Pay: недостаточно средств в кассе бота.\n\nОбратитесь к администратору.")
+                    elif "SPEND_ID_ALREADY_USED" in error_str:
+                        await bot.send_message(item.user_id, "❌ Ошибка вывода: повторный запрос.\n\nПопробуйте позже или обратитесь к администратору.")
+                    else:
+                        await bot.send_message(item.user_id, f"❌ Ошибка вывода: {e}")
                     continue
             
             await asyncio.sleep(interval_sec)
