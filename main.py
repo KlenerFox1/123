@@ -22,21 +22,29 @@ from app.services.payments import invoice_watcher, treasury_balance_watcher, wit
 
 async def main() -> None:
     import os
-    # Загружаем .env вручную из папки с ботом
-    env_file = Path(__file__).parent / ".env"
-    print(f"🔍 Looking for .env at: {env_file}")
-    print(f"🔍 Exists: {env_file.exists()}")
+    import glob
     
-    if env_file.exists():
+    # Ищем .env во всех подпапках
+    env_files = glob.glob("**/.env", recursive=True)
+    print(f"🔍 Found .env files: {env_files}")
+    
+    env_file = None
+    for ef in env_files:
+        if Path(ef).exists():
+            env_file = Path(ef)
+            break
+    
+    if env_file:
+        print(f"✅ Found .env at: {env_file}")
         with open(env_file, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
                 if line and not line.startswith("#") and "=" in line:
                     key, value = line.split("=", 1)
                     os.environ[key] = value
-        print(f"✅ Loaded .env file: AUTO_WITHDRAW = {os.environ.get('AUTO_WITHDRAW')}")
+        print(f"✅ Loaded: AUTO_WITHDRAW = {os.environ.get('AUTO_WITHDRAW')}")
     else:
-        print("❌ .env file not found!")
+        print("❌ .env not found!")
     
     cfg = load_config()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
