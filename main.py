@@ -21,9 +21,12 @@ from app.services.payments import invoice_watcher, treasury_balance_watcher, wit
 
 
 async def main() -> None:
-    # Загружаем .env вручную
     import os
-    env_file = Path(".env")
+    # Загружаем .env вручную из папки с ботом
+    env_file = Path(__file__).parent / ".env"
+    print(f"🔍 Looking for .env at: {env_file}")
+    print(f"🔍 Exists: {env_file.exists()}")
+    
     if env_file.exists():
         with open(env_file, "r", encoding="utf-8") as f:
             for line in f:
