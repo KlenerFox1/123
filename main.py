@@ -50,6 +50,8 @@ async def main() -> None:
     me = await bot.get_me()
     logging.info("Bot started: @%s (%s)", me.username, me.id)
     logging.info("Config: auto_withdraw=%s, watcher_interval=%d", cfg.auto_withdraw, cfg.watcher_interval_sec)
+    print(f"🔧 DEBUG: auto_withdraw from config = {cfg.auto_withdraw}")
+    print(f"🔧 DEBUG: type = {type(cfg.auto_withdraw)}")
 
     async def run_watchers():
         await asyncio.gather(

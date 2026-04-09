@@ -71,7 +71,7 @@ async def withdrawal_watcher(
 ) -> None:
     import logging
     log = logging.getLogger("withdrawal_watcher")
-    print(f"🚀 Withdrawal watcher started: auto_withdraw={auto_withdraw}")
+    print(f"🚀 Withdrawal watcher started: auto_withdraw={auto_withdraw} (type: {type(auto_withdraw)})")
     
     while True:
         try:
