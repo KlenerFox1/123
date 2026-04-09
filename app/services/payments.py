@@ -111,7 +111,10 @@ async def withdrawal_watcher(
                     print(f"❌ Transfer failed: {error_str}")
                     
                     # Проверяем ошибку баланса
-                    if "INSUFFICIENT_BALANCE" in error_str or "not enough balance" in error_str.lower():
+                    if "INSUFFICIENT_FUNDS" in error_str or "INSUFFICIENT_BALANCE" in error_str or "not enough balance" in error_str.lower():
+                        # Меняем статус на "error" чтобы не повторять
+                        await db.set_withdrawal_status(item.withdrawal_id, status="error", cryptobot_transfer_id=None)
+                        await db.move_frozen_to_balance(item.user_id, item.amount)  # возвращаем баланс
                         await bot.send_message(item.user_id, "❌ Вывод недоступен.\n\n💰 Ошибка Crypto Pay: недостаточно средств в кассе бота.\n\nОбратитесь к администратору.")
                     elif "SPEND_ID_ALREADY_USED" in error_str:
                         await bot.send_message(item.user_id, "❌ Ошибка вывода: повторный запрос.\n\nПопробуйте позже или обратитесь к администратору.")
