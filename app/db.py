@@ -236,6 +236,10 @@ class Database:
         current = await self.get_treasury_balance()
         await self.set_setting("treasury_balance", str(max(0.0, current + amount)))
 
+    async def deduct_treasury_balance(self, amount: float) -> None:
+        current = await self.get_treasury_balance()
+        await self.set_setting("treasury_balance", str(max(0.0, current - amount)))
+
     async def get_or_create_user(self, user_id: int) -> User:
         async with aiosqlite.connect(self._path) as db:
             await db.execute(
