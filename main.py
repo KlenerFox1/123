@@ -22,20 +22,16 @@ from app.services.payments import invoice_watcher, treasury_balance_watcher, wit
 
 async def main() -> None:
     import os
-    import glob
     
-    # Ищем .env во всех подпапках
-    env_files = glob.glob("**/.env", recursive=True)
-    print(f"🔍 Found .env files: {env_files}")
+    # Путь к папке с main.py
+    bot_dir = Path(__file__).parent.resolve()
+    env_file = bot_dir / ".env"
     
-    env_file = None
-    for ef in env_files:
-        if Path(ef).exists():
-            env_file = Path(ef)
-            break
+    print(f"🔍 Bot directory: {bot_dir}")
+    print(f"🔍 .env path: {env_file}")
+    print(f"🔍 Exists: {env_file.exists()}")
     
-    if env_file:
-        print(f"✅ Found .env at: {env_file}")
+    if env_file.exists():
         with open(env_file, "r", encoding="utf-8") as f:
             for line in f:
                 line = line.strip()
